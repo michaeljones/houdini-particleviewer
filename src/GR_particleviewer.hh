@@ -1,8 +1,20 @@
 #ifndef GR_PARTICLEVIEWER
 #define GR_PARTICLEVIEWER
 
-#include <GR/GR_RenderHook.h>
+#include <UT/UT_DSOVersion.h>
+
 #include <RE/RE_Render.h>
+
+#include <GEO/GEO_Primitive.h>
+
+#include <GU/GU_Detail.h>
+#include <GU/GU_PrimGroupClosure.h>
+
+#include <GR/GR_Detail.h>
+#include <GR/GR_RenderHook.h>
+#include <GR/GR_RenderTable.h>
+#include <GR/GR_DisplayOption.h>
+
 
 class ParticleViewerHook : public GR_RenderHook
 {

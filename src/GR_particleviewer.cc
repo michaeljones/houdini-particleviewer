@@ -1,13 +1,9 @@
 #include "GR_particleviewer.hh"
 
-#include <GEO/GEO_PrimType.h>
-#include <GR/GR_RenderTable.h>
-#include <UT/UT_DSOVersion.h>
-
 int ParticleViewerHook::getWireMask(GU_Detail* /*gdp*/, const GR_DisplayOption *dopt) const
 {
 	std::cerr << "mpj-debug: Requesting wire mask" << std::endl;
-	return GEOPRIMPART;
+	return GEOPRIMALL;
 }
 
 void ParticleViewerHook::renderWire(
@@ -19,21 +15,73 @@ void ParticleViewerHook::renderWire(
 		const GU_PrimGroupClosure *hidden_geometry
 		)
 {
+	int                  i, nprim, nvtx;
+	GEO_Primitive       *prim;
+	
+	nprim = gdp->primitives().entries();
+	for (i = 0; i < nprim; i++)
+	{
+	    prim = gdp->primitives()(i);
+	
+	    // Ignore hidden geomtry
+	    if (hidden_geometry && hidden_geometry->containsPrim(prim))
+	        continue;
+	
+	    // Only deal with particles
+	    if (!(prim->getPrimitiveId() & GEOPRIMPART))
+	        continue;
+
+		nvtx = prim->getVertexCount();
+
+		for (int j=0; j < nvtx; j++)
+		{
+			GEO_Point* point = prim->getVertex(j).getPt();
+			UT_Vector4 pos = point->getPos();
+
+			ren.beginClosedLine();
+
+			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
+
+			ren.endClosedLine();
+
+			ren.beginClosedLine();
+
+			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(), 0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(), 0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(), 0.1 + pos.z() );
+			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(), 0.1 + pos.z() );
+
+			ren.endClosedLine();
+
+			ren.beginLines();
+
+			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
+
+			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
+
+			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
+
+			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
+
+			ren.endLines();
+		}
+
+	}
+
 	std::cerr << "mpj-debug: Calliong renderWire" << std::endl;
-	ren.beginClosedLine();
-
-	ren.vertex3DW( -1, -1, -1 );
-	ren.vertex3DW(  1, -1, -1 );
-	ren.vertex3DW(  1,  1, -1 );
-	ren.vertex3DW( -1,  1, -1 );
-
-	ren.endClosedLine();
 }
 
 int ParticleViewerHook::getShadedMask(GU_Detail* /*gdp*/, const GR_DisplayOption* dopt) const
 {
-std::cerr << "mpj-debug: Requesting shaded mask" << std::endl;
-	return GEOPRIMPART;
+	std::cerr << "mpj-debug: Requesting shaded mask" << std::endl;
+	return GEOPRIMALL;
 }
 
 void ParticleViewerHook::renderShaded(
@@ -45,21 +93,72 @@ void ParticleViewerHook::renderShaded(
 		const GU_PrimGroupClosure *hidden_geometry
 		)
 {
-	std::cerr << "mpj-debug: Calling render shaded" << std::endl;
-	ren.beginClosedLine();
+	int                  i, nprim, nvtx;
+	GEO_Primitive       *prim;
 	
-	ren.vertex3DW( -1, -1,  1 );
-	ren.vertex3DW(  1, -1,  1 );
-	ren.vertex3DW(  1,  1,  1 );
-	ren.vertex3DW( -1,  1,  1 );
+	nprim = gdp->primitives().entries();
+	for (i = 0; i < nprim; i++)
+	{
+	    prim = gdp->primitives()(i);
+	
+	    // Ignore hidden geomtry
+	    if (hidden_geometry && hidden_geometry->containsPrim(prim))
+	        continue;
+	
+	    // Only deal with particles
+	    if (!(prim->getPrimitiveId() & GEOPRIMPART))
+	        continue;
 
-	ren.endClosedLine();
+		nvtx = prim->getVertexCount();
+
+		for (int j=0; j < nvtx; j++)
+		{
+			GEO_Point* point = prim->getVertex(j).getPt();
+			UT_Vector4 pos = point->getPos();
+
+			ren.beginQuadStrip();
+
+			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
+
+			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
+
+			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
+
+			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
+
+			ren.endQuadStrip();
+
+			ren.beginQuadStrip();
+
+			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
+
+			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
+
+			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
+
+			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
+
+			ren.endQuadStrip();
+		}
+
+	}
+
+	std::cerr << "mpj-debug: Calling render shaded" << std::endl;
 }
 
 
-void newRenderHook( GR_RenderTable* table )
+void
+newRenderHook(GR_RenderTable *table)
 {
-	std::cout << "Adding particle viewer hook" << std::endl;
-	table->addHook( new ParticleViewerHook, 2 );		// GR Render Hook Version
+	std::cerr << "mpj-debug: Adding Particle box" << std::endl;
+	table->addHook( new ParticleViewerHook, GR_RENDER_HOOK_VERSION );
 }
 

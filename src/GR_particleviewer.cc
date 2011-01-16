@@ -1,9 +1,12 @@
 #include "GR_particleviewer.hh"
 
 #include <GEO/GEO_PrimType.h>
+#include <GR/GR_RenderTable.h>
+#include <UT/UT_DSOVersion.h>
 
 int ParticleViewerHook::getWireMask(GU_Detail* /*gdp*/, const GR_DisplayOption *dopt) const
 {
+	std::cerr << "mpj-debug: Requesting wire mask" << std::endl;
 	return GEOPRIMPART;
 }
 
@@ -16,6 +19,7 @@ void ParticleViewerHook::renderWire(
 		const GU_PrimGroupClosure *hidden_geometry
 		)
 {
+	std::cerr << "mpj-debug: Calliong renderWire" << std::endl;
 	ren.beginClosedLine();
 
 	ren.vertex3DW( -1, -1, -1 );
@@ -28,6 +32,7 @@ void ParticleViewerHook::renderWire(
 
 int ParticleViewerHook::getShadedMask(GU_Detail* /*gdp*/, const GR_DisplayOption* dopt) const
 {
+std::cerr << "mpj-debug: Requesting shaded mask" << std::endl;
 	return GEOPRIMPART;
 }
 
@@ -40,6 +45,7 @@ void ParticleViewerHook::renderShaded(
 		const GU_PrimGroupClosure *hidden_geometry
 		)
 {
+	std::cerr << "mpj-debug: Calling render shaded" << std::endl;
 	ren.beginClosedLine();
 	
 	ren.vertex3DW( -1, -1,  1 );
@@ -53,6 +59,7 @@ void ParticleViewerHook::renderShaded(
 
 void newRenderHook( GR_RenderTable* table )
 {
-	table->addHook( new ParticleViewer );
+	std::cout << "Adding particle viewer hook" << std::endl;
+	table->addHook( new ParticleViewerHook, 2 );		// GR Render Hook Version
 }
 

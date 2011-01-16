@@ -2,12 +2,13 @@
 #define GR_PARTICLEVIEWER
 
 #include <GR/GR_RenderHook.h>
+#include <RE/RE_Render.h>
 
-class ParticleViewerHook : public GR_RenderHoook
+class ParticleViewerHook : public GR_RenderHook
 {
 public:
 
-	ParticleViewer() {}
+	ParticleViewerHook() {}
 
     int getWireMask(GU_Detail* /*gdp*/, const GR_DisplayOption *dopt) const;
 

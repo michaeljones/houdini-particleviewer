@@ -115,8 +115,23 @@ void ParticleViewerHook::renderShaded(
 		{
 			GEO_Point* point = prim->getVertex(j).getPt();
 			UT_Vector4 pos = point->getPos();
+			
+			GEO_AttributeHandle color = gdp->getPointAttribute( "Cd" );
+
+			color.setElement( point );
+
+			UT_Vector3 cd = color.getV3();
+
+			ren.setColor( cd.x(), cd.y(), cd.z(), 1.0 );
 
 			ren.beginQuadStrip();
+
+			float nml[3];
+			nml[0] = 0.0;
+			nml[1] = 0.0;
+			nml[2] = 1.0;
+
+			ren.n3DW(nml);
 
 			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
 			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
@@ -124,9 +139,15 @@ void ParticleViewerHook::renderShaded(
 			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
 			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
 
+			nml[0] = 0.0; nml[1] = -1.0; nml[2] = 0.0;
+			ren.n3DW(nml);
+
 			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
 			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
 
+			nml[0] = 0.0; nml[1] = 0.0; nml[2] = -1.0;
+			ren.n3DW(nml);
+			
 			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
 			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
 
@@ -134,14 +155,23 @@ void ParticleViewerHook::renderShaded(
 
 			ren.beginQuadStrip();
 
+			nml[0] = -1.0; nml[1] = 0.0; nml[2] = 0.0;
+			ren.n3DW(nml);
+
 			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
 			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
 
 			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
 			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
 
+			nml[0] = 0.0; nml[1] = 1.0; nml[2] = 0.0;
+			ren.n3DW(nml);
+
 			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
 			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
+
+			nml[0] = 1.0; nml[1] = 0.0; nml[2] = 0.0;
+			ren.n3DW(nml);
 
 			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
 			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );

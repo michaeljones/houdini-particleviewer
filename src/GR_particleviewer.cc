@@ -39,35 +39,35 @@ void ParticleViewerHook::renderWire(
 
 			ren.beginClosedLine();
 
-			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
-			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
-			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
-			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW( -0.5, -0.5, -0.5 );
+			ren.vertex3DW(  0.5, -0.5, -0.5 );
+			ren.vertex3DW(  0.5,  0.5, -0.5 );
+			ren.vertex3DW( -0.5,  0.5, -0.5 );
 
 			ren.endClosedLine();
 
 			ren.beginClosedLine();
 
-			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(), 0.1 + pos.z() );
-			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(), 0.1 + pos.z() );
-			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(), 0.1 + pos.z() );
-			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(), 0.1 + pos.z() );
+			ren.vertex3DW( -0.5, -0.5, 0.5 );
+			ren.vertex3DW(  0.5, -0.5, 0.5 );
+			ren.vertex3DW(  0.5,  0.5, 0.5 );
+			ren.vertex3DW( -0.5,  0.5, 0.5 );
 
 			ren.endClosedLine();
 
 			ren.beginLines();
 
-			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
-			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
+			ren.vertex3DW( -0.5, -0.5, -0.5 );
+			ren.vertex3DW( -0.5, -0.5,  0.5 );
 
-			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
-			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
+			ren.vertex3DW(  0.5,  0.5, -0.5 );
+			ren.vertex3DW(  0.5,  0.5,  0.5 );
 
-			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
-			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
+			ren.vertex3DW( -0.5,  0.5, -0.5 );
+			ren.vertex3DW( -0.5,  0.5,  0.5 );
 
-			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
-			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
+			ren.vertex3DW(  0.5, -0.5, -0.5 );
+			ren.vertex3DW(  0.5, -0.5,  0.5 );
 
 			ren.endLines();
 		}
@@ -113,12 +113,20 @@ void ParticleViewerHook::renderShaded(
 			UT_Vector4 pos = point->getPos();
 			
 			GEO_AttributeHandle color = gdp->getPointAttribute( "Cd" );
-
 			color.setElement( point );
-
 			UT_Vector3 cd = color.getV3();
 
+			GEO_AttributeHandle scaleAttr = gdp->getPointAttribute( "scale" );
+			scaleAttr.setElement( point );
+			UT_Vector3 scale = scaleAttr.getV3();
+
 			ren.setColor( cd.x(), cd.y(), cd.z(), 1.0 );
+
+			ren.pushMatrix();
+
+			ren.translate( pos.x(), pos.y(), pos.z() );
+
+			ren.scale( scale.x(), scale.y(), scale.z() );
 
 			ren.beginQuads();
 
@@ -126,52 +134,54 @@ void ParticleViewerHook::renderShaded(
 			nml[0] = 0.0; nml[1] = 0.0; nml[2] = -1.0;
 			ren.n3DW(nml);
 			
-			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
-			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
-			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
-			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW( -0.5,  0.5, -0.5 );
+			ren.vertex3DW(  0.5,  0.5, -0.5 );
+			ren.vertex3DW(  0.5, -0.5, -0.5 );
+			ren.vertex3DW( -0.5, -0.5, -0.5 );
 
 			nml[0] = 0.0; nml[1] = 0.0; nml[2] = 1.0; 
 			ren.n3DW(nml);
 
-			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
-			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
-			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
-			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
+			ren.vertex3DW( -0.5, -0.5,  0.5 );
+			ren.vertex3DW(  0.5, -0.5,  0.5 );
+			ren.vertex3DW(  0.5,  0.5,  0.5 );
+			ren.vertex3DW( -0.5,  0.5,  0.5 );
 
 			nml[0] = 0.0; nml[1] = -1.0; nml[2] = 0.0;
 			ren.n3DW(nml);
 			
-			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
-			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
-			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
-			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
+			ren.vertex3DW( -0.5, -0.5, -0.5 );
+			ren.vertex3DW(  0.5, -0.5, -0.5 );
+			ren.vertex3DW(  0.5, -0.5,  0.5 );
+			ren.vertex3DW( -0.5, -0.5,  0.5 );
 
 			nml[0] = 0.0; nml[1] = 1.0; nml[2] = 0.0;
 			ren.n3DW(nml);
 
-			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
-			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
-			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
-			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW( -0.5,  0.5,  0.5 );
+			ren.vertex3DW(  0.5,  0.5,  0.5 );
+			ren.vertex3DW(  0.5,  0.5, -0.5 );
+			ren.vertex3DW( -0.5,  0.5, -0.5 );
 
 			nml[0] = -1.0; nml[1] = 0.0; nml[2] = 0.0;
 			ren.n3DW(nml);
 
-			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
-			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
-			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
-			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW( -0.5, -0.5,  0.5 );
+			ren.vertex3DW( -0.5,  0.5,  0.5 );
+			ren.vertex3DW( -0.5,  0.5, -0.5 );
+			ren.vertex3DW( -0.5, -0.5, -0.5 );
 
 			nml[0] = 1.0; nml[1] = 0.0; nml[2] = 0.0;
 			ren.n3DW(nml);
 
-			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
-			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
-			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
-			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW(  0.5,  0.5, -0.5 );
+			ren.vertex3DW(  0.5,  0.5,  0.5 );
+			ren.vertex3DW(  0.5, -0.5,  0.5 );
+			ren.vertex3DW(  0.5, -0.5, -0.5 );
 
 			ren.endQuadStrip();
+
+			ren.popMatrix();
 		}
 
 	}

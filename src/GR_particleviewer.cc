@@ -2,7 +2,6 @@
 
 int ParticleViewerHook::getWireMask(GU_Detail* /*gdp*/, const GR_DisplayOption *dopt) const
 {
-	std::cerr << "mpj-debug: Requesting wire mask" << std::endl;
 	return GEOPRIMALL;
 }
 
@@ -74,13 +73,10 @@ void ParticleViewerHook::renderWire(
 		}
 
 	}
-
-	std::cerr << "mpj-debug: Calliong renderWire" << std::endl;
 }
 
 int ParticleViewerHook::getShadedMask(GU_Detail* /*gdp*/, const GR_DisplayOption* dopt) const
 {
-	std::cerr << "mpj-debug: Requesting shaded mask" << std::endl;
 	return GEOPRIMALL;
 }
 
@@ -124,65 +120,63 @@ void ParticleViewerHook::renderShaded(
 
 			ren.setColor( cd.x(), cd.y(), cd.z(), 1.0 );
 
-			ren.beginQuadStrip();
+			ren.beginQuads();
 
 			float nml[3];
-			nml[0] = 0.0;
-			nml[1] = 0.0;
-			nml[2] = 1.0;
-
-			ren.n3DW(nml);
-
-			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
-			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
-
-			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
-			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
-
-			nml[0] = 0.0; nml[1] = -1.0; nml[2] = 0.0;
-			ren.n3DW(nml);
-
-			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
-			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
-
 			nml[0] = 0.0; nml[1] = 0.0; nml[2] = -1.0;
 			ren.n3DW(nml);
 			
 			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
 			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
 
-			ren.endQuadStrip();
-
-			ren.beginQuadStrip();
-
-			nml[0] = -1.0; nml[1] = 0.0; nml[2] = 0.0;
+			nml[0] = 0.0; nml[1] = 0.0; nml[2] = 1.0; 
 			ren.n3DW(nml);
 
-			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
 			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
-
-			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
 			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
+
+			nml[0] = 0.0; nml[1] = -1.0; nml[2] = 0.0;
+			ren.n3DW(nml);
+			
+			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
+			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
 
 			nml[0] = 0.0; nml[1] = 1.0; nml[2] = 0.0;
 			ren.n3DW(nml);
 
-			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
 			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
+
+			nml[0] = -1.0; nml[1] = 0.0; nml[2] = 0.0;
+			ren.n3DW(nml);
+
+			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
+			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
+			ren.vertex3DW( -0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW( -0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
 
 			nml[0] = 1.0; nml[1] = 0.0; nml[2] = 0.0;
 			ren.n3DW(nml);
 
-			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(), -0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(),  0.1 + pos.y(),  0.1 + pos.z() );
 			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(),  0.1 + pos.z() );
+			ren.vertex3DW(  0.1 + pos.x(), -0.1 + pos.y(), -0.1 + pos.z() );
 
 			ren.endQuadStrip();
 		}
 
 	}
-
-	std::cerr << "mpj-debug: Calling render shaded" << std::endl;
 }
+
 
 
 void

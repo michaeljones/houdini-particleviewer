@@ -37,6 +37,19 @@ void ParticleViewerHook::renderWire(
 			GEO_Point* point = prim->getVertex(j).getPt();
 			UT_Vector4 pos = point->getPos();
 
+			UT_Vector3 scale( 1.0f, 1.0f, 1.0f );
+			GEO_AttributeHandle scaleAttr = gdp->getPointAttribute( "scale" );
+			if ( scaleAttr.isAttributeValid() )
+			{
+				scaleAttr.setElement( point );
+				scale = scaleAttr.getV3();
+			}
+
+			ren.pushMatrix();
+
+			ren.translate( pos.x(), pos.y(), pos.z() );
+			ren.scale( scale.x(), scale.y(), scale.z() );
+
 			ren.beginClosedLine();
 
 			ren.vertex3DW( -0.5, -0.5, -0.5 );
@@ -70,6 +83,8 @@ void ParticleViewerHook::renderWire(
 			ren.vertex3DW(  0.5, -0.5,  0.5 );
 
 			ren.endLines();
+
+			ren.popMatrix();
 		}
 
 	}
@@ -112,13 +127,21 @@ void ParticleViewerHook::renderShaded(
 			GEO_Point* point = prim->getVertex(j).getPt();
 			UT_Vector4 pos = point->getPos();
 			
-			GEO_AttributeHandle color = gdp->getPointAttribute( "Cd" );
-			color.setElement( point );
-			UT_Vector3 cd = color.getV3();
+			UT_Vector3 cd( 1.0f, 1.0f, 1.0f );
+			GEO_AttributeHandle colorAttr = gdp->getPointAttribute( "Cd" );
+			if ( colorAttr.isAttributeValid() )
+			{
+				colorAttr.setElement( point );
+				cd = colorAttr.getV3();
+			}
 
+			UT_Vector3 scale( 1.0f, 1.0f, 1.0f );
 			GEO_AttributeHandle scaleAttr = gdp->getPointAttribute( "scale" );
-			scaleAttr.setElement( point );
-			UT_Vector3 scale = scaleAttr.getV3();
+			if ( scaleAttr.isAttributeValid() )
+			{
+				scaleAttr.setElement( point );
+				scale = scaleAttr.getV3();
+			}
 
 			ren.setColor( cd.x(), cd.y(), cd.z(), 1.0 );
 
@@ -192,7 +215,7 @@ void ParticleViewerHook::renderShaded(
 void
 newRenderHook(GR_RenderTable *table)
 {
-	std::cerr << "mpj-debug: Adding Particle box" << std::endl;
+	std::cout << std::endl << "Loading Particle Box" << std::endl;
 	table->addHook( new ParticleViewerHook, GR_RENDER_HOOK_VERSION );
 }
 

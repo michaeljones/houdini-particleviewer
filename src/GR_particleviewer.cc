@@ -45,10 +45,23 @@ void ParticleViewerHook::renderWire(
 				scale = scaleAttr.getV3();
 			}
 
+			UT_Vector3 rotate( 0.0f, 0.0f, 0.0f );
+			GEO_AttributeHandle rotateAttr = gdp->getPointAttribute( "rotate" );
+			if ( rotateAttr.isAttributeValid() )
+			{
+				rotateAttr.setElement( point );
+				rotate = rotateAttr.getV3();
+			}
+
 			ren.pushMatrix();
 
 			ren.translate( pos.x(), pos.y(), pos.z() );
 			ren.scale( scale.x(), scale.y(), scale.z() );
+
+			// Rotate around each axis in turn
+			ren.rotate( rotate.x(), 'x' );
+			ren.rotate( rotate.y(), 'y' );
+			ren.rotate( rotate.z(), 'z' );
 
 			ren.beginClosedLine();
 
@@ -143,6 +156,14 @@ void ParticleViewerHook::renderShaded(
 				scale = scaleAttr.getV3();
 			}
 
+			UT_Vector3 rotate( 0.0f, 0.0f, 0.0f );
+			GEO_AttributeHandle rotateAttr = gdp->getPointAttribute( "rotate" );
+			if ( rotateAttr.isAttributeValid() )
+			{
+				rotateAttr.setElement( point );
+				rotate = rotateAttr.getV3();
+			}
+
 			ren.setColor( cd.x(), cd.y(), cd.z(), 1.0 );
 
 			ren.pushMatrix();
@@ -150,6 +171,11 @@ void ParticleViewerHook::renderShaded(
 			ren.translate( pos.x(), pos.y(), pos.z() );
 
 			ren.scale( scale.x(), scale.y(), scale.z() );
+
+			// Rotate around each axis in turn
+			ren.rotate( rotate.x(), 'x' );
+			ren.rotate( rotate.y(), 'y' );
+			ren.rotate( rotate.z(), 'z' );
 
 			ren.beginQuads();
 

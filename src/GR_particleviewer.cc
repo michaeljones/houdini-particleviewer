@@ -60,12 +60,13 @@ void ParticleViewerHook::renderWire(
 			ren.pushMatrix();
 
 			ren.translate( pos.x(), pos.y(), pos.z() );
-			ren.scale( scale.x(), scale.y(), scale.z() );
 
 			// Rotate around each axis in turn
 			ren.rotate( rotate.x(), 'x' );
 			ren.rotate( rotate.y(), 'y' );
 			ren.rotate( rotate.z(), 'z' );
+
+			ren.scale( scale.x(), scale.y(), scale.z() );
 
 			ren.beginClosedLine();
 
@@ -180,12 +181,12 @@ void ParticleViewerHook::renderShaded(
 
 			ren.translate( pos.x(), pos.y(), pos.z() );
 
-			ren.scale( scale.x(), scale.y(), scale.z() );
-
 			// Rotate around each axis in turn
 			ren.rotate( rotate.x(), 'x' );
 			ren.rotate( rotate.y(), 'y' );
 			ren.rotate( rotate.z(), 'z' );
+
+			ren.scale( scale.x(), scale.y(), scale.z() );
 
 			ren.beginQuads();
 

@@ -1,5 +1,8 @@
 #include "GR_particleviewer.hh"
 
+#include <GR/GR_UserOption.h>
+#include <UT/UT_Options.h>
+
 int ParticleViewerHook::getWireMask(GU_Detail* /*gdp*/, const GR_DisplayOption *dopt) const
 {
 	return GEOPRIMALL;
@@ -16,6 +19,12 @@ void ParticleViewerHook::renderWire(
 {
 	int                  i, nprim, nvtx;
 	GEO_Primitive       *prim;
+
+	const GR_UserOption* option = dopt->getOption( "particleviewerbox" );
+	if ( ! option ) 
+	{
+		return;
+	}
 	
 	nprim = gdp->primitives().entries();
 	for (i = 0; i < nprim; i++)
@@ -124,7 +133,13 @@ void ParticleViewerHook::renderShaded(
 {
 	int                  i, nprim, nvtx;
 	GEO_Primitive       *prim;
-	
+
+	const GR_UserOption* option = dopt->getOption( "particleviewerbox" );
+	if ( ! option ) 
+	{
+		return;
+	}
+
 	nprim = gdp->primitives().entries();
 	for (i = 0; i < nprim; i++)
 	{
@@ -252,7 +267,7 @@ void ParticleViewerHook::renderShaded(
 void
 newRenderHook(GR_RenderTable *table)
 {
-	std::cout << std::endl << "Loading Particle Box 0.2" << std::endl;
+	std::cout << std::endl << "Loading Particle Box 0.2 beta" << std::endl;
 	table->addHook( new ParticleViewerHook, GR_RENDER_HOOK_VERSION );
 }
 

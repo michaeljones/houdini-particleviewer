@@ -32,22 +32,26 @@ void ParticleViewerHook::renderWire(
 
 		nvtx = prim->getVertexCount();
 
+		GEO_AttributeHandle scaleAttr = gdp->getPointAttribute( "scale" );
+		GEO_AttributeHandle rotateAttr = gdp->getPointAttribute( "rotate" );
+		
+		bool scaleValid = scaleAttr.isAttributeValid();
+		bool rotateValid = rotateAttr.isAttributeValid();
+		
 		for (int j=0; j < nvtx; j++)
 		{
 			GEO_Point* point = prim->getVertex(j).getPt();
 			UT_Vector4 pos = point->getPos();
 
 			UT_Vector3 scale( 1.0f, 1.0f, 1.0f );
-			GEO_AttributeHandle scaleAttr = gdp->getPointAttribute( "scale" );
-			if ( scaleAttr.isAttributeValid() )
+			if ( scaleValid )
 			{
 				scaleAttr.setElement( point );
 				scale = scaleAttr.getV3();
 			}
 
 			UT_Vector3 rotate( 0.0f, 0.0f, 0.0f );
-			GEO_AttributeHandle rotateAttr = gdp->getPointAttribute( "rotate" );
-			if ( rotateAttr.isAttributeValid() )
+			if ( rotateValid )
 			{
 				rotateAttr.setElement( point );
 				rotate = rotateAttr.getV3();
@@ -241,7 +245,7 @@ void ParticleViewerHook::renderShaded(
 void
 newRenderHook(GR_RenderTable *table)
 {
-	std::cout << std::endl << "Loading Particle Box" << std::endl;
+	std::cout << std::endl << "Loading Particle Box 0.2" << std::endl;
 	table->addHook( new ParticleViewerHook, GR_RENDER_HOOK_VERSION );
 }
 

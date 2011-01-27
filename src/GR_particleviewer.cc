@@ -34,10 +34,10 @@ void ParticleViewerHook::renderWire(
 
 		GEO_AttributeHandle scaleAttr = gdp->getPointAttribute( "scale" );
 		GEO_AttributeHandle rotateAttr = gdp->getPointAttribute( "rotate" );
-		
+
 		bool scaleValid = scaleAttr.isAttributeValid();
 		bool rotateValid = rotateAttr.isAttributeValid();
-		
+
 		for (int j=0; j < nvtx; j++)
 		{
 			GEO_Point* point = prim->getVertex(j).getPt();
@@ -139,22 +139,28 @@ void ParticleViewerHook::renderShaded(
 
 		nvtx = prim->getVertexCount();
 
+		GEO_AttributeHandle colourAttr = gdp->getPointAttribute( "colour" );
+		GEO_AttributeHandle scaleAttr = gdp->getPointAttribute( "scale" );
+		GEO_AttributeHandle rotateAttr = gdp->getPointAttribute( "rotate" );
+
+		bool colourValid = colourAttr.isAttributeValid();
+		bool scaleValid = scaleAttr.isAttributeValid();
+		bool rotateValid = rotateAttr.isAttributeValid();
+
 		for (int j=0; j < nvtx; j++)
 		{
 			GEO_Point* point = prim->getVertex(j).getPt();
 			UT_Vector4 pos = point->getPos();
 			
 			UT_Vector3 cd( 1.0f, 1.0f, 1.0f );
-			GEO_AttributeHandle colorAttr = gdp->getPointAttribute( "Cd" );
-			if ( colorAttr.isAttributeValid() )
+			if ( colourValid )
 			{
-				colorAttr.setElement( point );
-				cd = colorAttr.getV3();
+				colourAttr.setElement( point );
+				cd = colourAttr.getV3();
 			}
 
 			UT_Vector3 scale( 1.0f, 1.0f, 1.0f );
-			GEO_AttributeHandle scaleAttr = gdp->getPointAttribute( "scale" );
-			if ( scaleAttr.isAttributeValid() )
+			if ( scaleValid )
 			{
 				scaleAttr.setElement( point );
 				scale = scaleAttr.getV3();
@@ -162,7 +168,7 @@ void ParticleViewerHook::renderShaded(
 
 			UT_Vector3 rotate( 0.0f, 0.0f, 0.0f );
 			GEO_AttributeHandle rotateAttr = gdp->getPointAttribute( "rotate" );
-			if ( rotateAttr.isAttributeValid() )
+			if ( rotateValid )
 			{
 				rotateAttr.setElement( point );
 				rotate = rotateAttr.getV3();

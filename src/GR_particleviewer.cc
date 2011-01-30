@@ -203,12 +203,27 @@ void ParticleViewerHook::renderShaded(
 		const GU_PrimGroupClosure *hidden_geometry
 		)
 {
-	const GR_UserOption* option = dopt->getOption( "particleviewerbox" );
-	if ( ! option ) 
+	const GR_UserOption* boxOption = dopt->getOption( "particleviewerbox" );
+	if ( boxOption ) 
 	{
+		renderShadedCubes( gdp, ren, hidden_geometry );
 		return;
 	}
 
+	const GR_UserOption* discOption = dopt->getOption( "particleviewerdisc" );
+	if ( discOption ) 
+	{
+		renderShadedDiscs( gdp, ren, hidden_geometry );
+		return;
+	}
+}
+
+void ParticleViewerHook::renderShadedCubes(
+		GU_Detail *gdp,
+		RE_Render &ren,
+		const GU_PrimGroupClosure *hidden_geometry
+		)
+{
 	int nprim = gdp->primitives().entries();
 	for (int p = 0; p < nprim; ++p)
 	{
@@ -430,133 +445,235 @@ void ParticleViewerHook::renderShaded(
 		delete [] indices;
 		delete [] normals;
 		if ( colourValid ) delete [] colours;
-
-		/*
-		float                   life_buffer[2];
-        UT_Vector3              cvs_buffer[4], v_buffer;
-        const float             *life;
-        const UT_Vector3        *cvs, *v;
-
-        life = ppt->getPointer<float>(life_id, life_buffer, 2);
-        cvs  = ppt->getPointer<UT_Vector3>(cvs_id, cvs_buffer, 4);
-        v    = ppt->getPointer<UT_Vector3>(v_id, &v_buffer, 1);
-
-	    GB_AttributeRef     Cd_ref;
-		Cd_ref = gdp->findNormalAttribute(GEO_POINT_DICT);
-		if (Cd_ref.isValid())
-		{
-			FOR_ALL_GPOINTS(gdp, pp)
-			{
-				ppt->setValue<UT_Vector3>(Cd_ref, UT_Vector3(1, 0, 0));
-			}
-		}
-
-		for (int j=0; j < nvtx; j++)
-		{
-			GEO_Point* point = prim->getVertex(j).getPt();
-			UT_Vector4 pos = point->getPos();
-			
-			UT_Vector3 cd( 1.0f, 1.0f, 1.0f );
-			if ( colourValid )
-			{
-				colourAttr.setElement( point );
-				cd = colourAttr.getV3();
-			}
-
-			UT_Vector3 scale( 1.0f, 1.0f, 1.0f );
-			if ( scaleValid )
-			{
-				scaleAttr.setElement( point );
-				scale = scaleAttr.getV3();
-			}
-
-			UT_Vector3 rotate( 0.0f, 0.0f, 0.0f );
-			GEO_AttributeHandle rotateAttr = gdp->getPointAttribute( "rotate" );
-			if ( rotateValid )
-			{
-				rotateAttr.setElement( point );
-				rotate = rotateAttr.getV3();
-			}
-
-			setColor( cd.x(), cd.y(), cd.z(), 1.0 );
-
-			pushMatrix();
-
-			translate( pos.x(), pos.y(), pos.z() );
-
-			// Rotate around each axis in turn
-			rotate( rotate.x(), 'x' );
-			rotate( rotate.y(), 'y' );
-			rotate( rotate.z(), 'z' );
-
-			scale( scale.x(), scale.y(), scale.z() );
-
-			beginQuads();
-
-			float nml[3];
-			nml[0] = 0.0; nml[1] = 0.0; nml[2] = -1.0;
-			n3DW(nml);
-			
-			vertex3DW( -0.5,  0.5, -0.5 );
-			vertex3DW(  0.5,  0.5, -0.5 );
-			vertex3DW(  0.5, -0.5, -0.5 );
-			vertex3DW( -0.5, -0.5, -0.5 );
-
-			nml[0] = 0.0; nml[1] = 0.0; nml[2] = 1.0; 
-			n3DW(nml);
-
-			vertex3DW( -0.5, -0.5,  0.5 );
-			vertex3DW(  0.5, -0.5,  0.5 );
-			vertex3DW(  0.5,  0.5,  0.5 );
-			vertex3DW( -0.5,  0.5,  0.5 );
-
-			nml[0] = 0.0; nml[1] = -1.0; nml[2] = 0.0;
-			n3DW(nml);
-			
-			vertex3DW( -0.5, -0.5, -0.5 );
-			vertex3DW(  0.5, -0.5, -0.5 );
-			vertex3DW(  0.5, -0.5,  0.5 );
-			vertex3DW( -0.5, -0.5,  0.5 );
-
-			nml[0] = 0.0; nml[1] = 1.0; nml[2] = 0.0;
-			n3DW(nml);
-
-			vertex3DW( -0.5,  0.5,  0.5 );
-			vertex3DW(  0.5,  0.5,  0.5 );
-			vertex3DW(  0.5,  0.5, -0.5 );
-			vertex3DW( -0.5,  0.5, -0.5 );
-
-			nml[0] = -1.0; nml[1] = 0.0; nml[2] = 0.0;
-			n3DW(nml);
-
-			vertex3DW( -0.5, -0.5,  0.5 );
-			vertex3DW( -0.5,  0.5,  0.5 );
-			vertex3DW( -0.5,  0.5, -0.5 );
-			vertex3DW( -0.5, -0.5, -0.5 );
-
-			nml[0] = 1.0; nml[1] = 0.0; nml[2] = 0.0;
-			n3DW(nml);
-
-			vertex3DW(  0.5,  0.5, -0.5 );
-			vertex3DW(  0.5,  0.5,  0.5 );
-			vertex3DW(  0.5, -0.5,  0.5 );
-			vertex3DW(  0.5, -0.5, -0.5 );
-
-			endQuadStrip();
-
-			popMatrix();
-		}
-
-		*/
 	}
 }
 
 
+void ParticleViewerHook::renderShadedDiscs(
+		GU_Detail *gdp,
+		RE_Render &ren,
+		const GU_PrimGroupClosure *hidden_geometry
+		)
+{
+	int nprim = gdp->primitives().entries();
+	for (int p = 0; p < nprim; ++p)
+	{
+	    GEO_Primitive* prim = gdp->primitives()(p);
+	
+	    // Ignore hidden geomtry
+	    if (hidden_geometry && hidden_geometry->containsPrim(prim))
+	        continue;
+	
+	    // Only deal with particles
+	    if (!(prim->getPrimitiveId() & GEOPRIMPART))
+	        continue;
+
+		int nvtx = prim->getVertexCount();
+
+		// Early exit if there are no particles
+		if ( ! nvtx ) continue;
+
+		GB_AttributeRef colourRef = gdp->findPointAttrib( "Cd", 3 * sizeof(float), GB_ATTRIB_FLOAT );
+		GB_AttributeRef scaleRef = gdp->findPointAttrib( "scale", 3 * sizeof(float), GB_ATTRIB_FLOAT );
+		GB_AttributeRef rotateRef = gdp->findPointAttrib( "rotate", 3 * sizeof(float), GB_ATTRIB_FLOAT );
+
+		bool colourValid = colourRef.isValid();
+		bool scaleValid = scaleRef.isValid();
+		bool rotateValid = rotateRef.isValid();
+
+		float* posData = new float[nvtx * 3 * 11];
+		float* normals = new float[nvtx * 3];
+		float* colours = new float[nvtx * 3];
+
+		for (int j=0; j < nvtx; j++)
+		{
+			GEO_Point* ppt = prim->getVertex(j).getPt();
+			UT_Vector4 pos = ppt->getPos();
+
+			UT_Matrix4 transform( 1.0f );
+			UT_Matrix4 rotTransform( 1.0f );
+
+			UT_Vector3 bx( 0.5, 0.0, 0.0 );
+			UT_Vector3 by( 0.0, 0.5, 0.0 );
+
+			UT_Vector3 n( 0.0, 0.0, 1.0 );
+
+			if ( colourValid )
+			{
+				UT_Vector3 colourBuffer;
+				const UT_Vector3* colour;
+				colour = ppt->getPointer< UT_Vector3 >( colourRef, &colourBuffer, 1 );
+				colours[ j * 3 + 0 ] = colour->x();
+				colours[ j * 3 + 1 ] = colour->y();
+				colours[ j * 3 + 2 ] = colour->z();
+			}
+
+			if ( scaleValid )
+			{
+				UT_Vector3 scaleBuffer;
+				const UT_Vector3* scale;
+				scale = ppt->getPointer< UT_Vector3 >( scaleRef, &scaleBuffer, 1 );
+				transform.scale( scale->x(), scale->y(), scale->z() );
+			}
+
+			if ( rotateValid )
+			{
+				UT_Vector3 rotateBuffer;
+				const UT_Vector3* rotate;
+				UT_XformOrder xformOrder;
+				rotate = ppt->getPointer< UT_Vector3 >( rotateRef, &rotateBuffer, 1 );
+				transform.rotate( rotate->x(), rotate->y(), rotate->z(), xformOrder );
+				rotTransform.rotate( rotate->x(), rotate->y(), rotate->z(), xformOrder );
+			}
+
+			n = n * rotTransform;
+
+			bx = bx * transform;
+			by = by * transform;
+
+			int offset = j * 3 * 11;
+
+			// Centre
+			posData[ offset + 0 + 0 ] = pos[0];
+			posData[ offset + 0 + 1 ] = pos[1];
+			posData[ offset + 0 + 2 ] = pos[2];
+
+			// sin & cos of 0.0/10.0 * 2 * pi
+			posData[ offset + 3 + 0 ] = pos[0] + 0.0f * bx[0] + 1.0f * by[0];
+			posData[ offset + 3 + 1 ] = pos[1] + 0.0f * bx[1] + 1.0f * by[1];
+			posData[ offset + 3 + 2 ] = pos[2] + 0.0f * bx[2] + 1.0f * by[2];
+
+			// sin & cos of 1.0/10.0 * 2 * pi
+			posData[ offset + 6 + 0 ] = pos[0] + 0.587785252292f * bx[0] + 0.809016994375f * by[0];
+			posData[ offset + 6 + 1 ] = pos[1] + 0.587785252292f * bx[1] + 0.809016994375f * by[1];
+			posData[ offset + 6 + 2 ] = pos[2] + 0.587785252292f * bx[2] + 0.809016994375f * by[2];
+
+			// sin & cos of 2.0/10.0 * 2 * pi
+			posData[ offset + 9 + 0 ] = pos[0] + 0.951056516295f * bx[0] + 0.309016994375f * by[0];
+			posData[ offset + 9 + 1 ] = pos[1] + 0.951056516295f * bx[1] + 0.309016994375f * by[1];
+			posData[ offset + 9 + 2 ] = pos[2] + 0.951056516295f * bx[2] + 0.309016994375f * by[2];
+
+			// sin & cos of 3.0/10.0 * 2 * pi
+			posData[ offset + 12 + 0 ] = pos[0] + 0.951056516295f * bx[0] - 0.309016994375f * by[0];
+			posData[ offset + 12 + 1 ] = pos[1] + 0.951056516295f * bx[1] - 0.309016994375f * by[1];
+			posData[ offset + 12 + 2 ] = pos[2] + 0.951056516295f * bx[2] - 0.309016994375f * by[2];
+
+			// sin & cos of 4.0/10.0 * 2 * pi
+			posData[ offset + 15 + 0 ] = pos[0] + 0.587785252292f * bx[0] - 0.809016994375f * by[0];
+			posData[ offset + 15 + 1 ] = pos[1] + 0.587785252292f * bx[1] - 0.809016994375f * by[1];
+			posData[ offset + 15 + 2 ] = pos[2] + 0.587785252292f * bx[2] - 0.809016994375f * by[2];
+
+			// sin & cos of 5.0/10.0 * 2 * pi
+			posData[ offset + 18 + 0 ] = pos[0] + 0.0f * bx[0] - 1.0f * by[0];
+			posData[ offset + 18 + 1 ] = pos[1] + 0.0f * bx[1] - 1.0f * by[1];
+			posData[ offset + 18 + 2 ] = pos[2] + 0.0f * bx[2] - 1.0f * by[2];
+
+			// sin & cos of 6.0/10.0 * 2 * pi
+			posData[ offset + 21 + 0 ] = pos[0] - 0.587785252292f * bx[0] - 0.809016994375f * by[0];
+			posData[ offset + 21 + 1 ] = pos[1] - 0.587785252292f * bx[1] - 0.809016994375f * by[1];
+			posData[ offset + 21 + 2 ] = pos[2] - 0.587785252292f * bx[2] - 0.809016994375f * by[2];
+
+			// sin & cos of 7.0/10.0 * 2 * pi
+			posData[ offset + 24 + 0 ] = pos[0] - 0.951056516295f * bx[0] - 0.309016994375f * by[0];
+			posData[ offset + 24 + 1 ] = pos[1] - 0.951056516295f * bx[1] - 0.309016994375f * by[1];
+			posData[ offset + 24 + 2 ] = pos[2] - 0.951056516295f * bx[2] - 0.309016994375f * by[2];
+
+			// sin & cos of 8.0/10.0 * 2 * pi
+			posData[ offset + 27 + 0 ] = pos[0] - 0.951056516295f * bx[0] + 0.309016994375f * by[0];
+			posData[ offset + 27 + 1 ] = pos[1] - 0.951056516295f * bx[1] + 0.309016994375f * by[1];
+			posData[ offset + 27 + 2 ] = pos[2] - 0.951056516295f * bx[2] + 0.309016994375f * by[2];
+
+			// sin & cos of 9.0/10.0 * 2 * pi
+			posData[ offset + 30 + 0 ] = pos[0] - 0.587785252292f * bx[0] + 0.809016994375f * by[0];
+			posData[ offset + 30 + 1 ] = pos[1] - 0.587785252292f * bx[1] + 0.809016994375f * by[1];
+			posData[ offset + 30 + 2 ] = pos[2] - 0.587785252292f * bx[2] + 0.809016994375f * by[2];
+
+			int normOffset = j * 3;
+			normals[ normOffset + 0 ] = - n[0];
+			normals[ normOffset + 1 ] = - n[1];
+			normals[ normOffset + 2 ] = - n[2];
+		}
+
+		int* indices = new int[nvtx * 30];
+
+		for (int j=0; j < nvtx; ++j )
+		{
+			int offset = j * 30;
+
+			indices[ offset +  0 ] =  0 * 3;
+			indices[ offset +  1 ] =  1 * 3;
+			indices[ offset +  2 ] =  2 * 3;
+			indices[ offset +  3 ] =  0 * 3;
+			indices[ offset +  4 ] =  2 * 3;
+			indices[ offset +  5 ] =  3 * 3;
+			indices[ offset +  6 ] =  0 * 3;
+			indices[ offset +  7 ] =  3 * 3;
+			indices[ offset +  8 ] =  4 * 3;
+			indices[ offset +  9 ] =  0 * 3;
+			indices[ offset + 10 ] =  4 * 3;
+			indices[ offset + 11 ] =  5 * 3;
+			indices[ offset + 12 ] =  0 * 3;
+			indices[ offset + 13 ] =  5 * 3;
+			indices[ offset + 14 ] =  6 * 3;
+			indices[ offset + 15 ] =  0 * 3;
+			indices[ offset + 16 ] =  6 * 3;
+			indices[ offset + 17 ] =  7 * 3;
+			indices[ offset + 18 ] =  0 * 3;
+			indices[ offset + 19 ] =  7 * 3;
+			indices[ offset + 20 ] =  8 * 3;
+			indices[ offset + 21 ] =  0 * 3;
+			indices[ offset + 22 ] =  8 * 3;
+			indices[ offset + 23 ] =  9 * 3;
+			indices[ offset + 24 ] =  0 * 3;
+			indices[ offset + 25 ] =  9 * 3;
+			indices[ offset + 26 ] = 10 * 3;
+			indices[ offset + 27 ] =  0 * 3;
+			indices[ offset + 28 ] = 10 * 3;
+			indices[ offset + 29 ] =  1 * 3;
+		}
+
+
+		ren.beginTriangles();
+
+		for (int j=0; j < nvtx; ++j )
+		{
+
+			if ( colourValid )
+			{
+				ren.setColor(
+						colours[ j * 3 + 0 ],
+						colours[ j * 3 + 1 ],
+						colours[ j * 3 + 2 ],
+						1.0 );
+			}
+
+			ren.n3DW( normals + j * 3 );
+
+			int offset = j * 3 * 11;
+
+			for ( int i=0; i < 30; ++i )
+			{
+				ren.vertex3DW(
+						posData[ offset + indices[ i ] + 0 ],
+						posData[ offset + indices[ i ] + 1 ],
+						posData[ offset + indices[ i ] + 2 ]
+					);
+			}
+		}
+
+		ren.endTriangles();
+
+		delete [] posData;
+		delete [] normals;
+		delete [] indices;
+		if ( colourValid ) delete [] colours;
+	}
+}
 
 void
 newRenderHook(GR_RenderTable *table)
 {
-	std::cout << std::endl << "Loading Particle Box 0.2 beta" << std::endl;
+	std::cout << std::endl << "Loading Particle Box 0.3 beta" << std::endl;
 	table->addHook( new ParticleViewerHook, GR_RENDER_HOOK_VERSION );
 }
 

@@ -44,6 +44,18 @@ public:
 			const GU_PrimGroupClosure *hidden_geometry
 			);
 
+	void renderShadedCubes(
+		GU_Detail *gdp,
+		RE_Render &ren,
+		const GU_PrimGroupClosure *hidden_geometry
+		);
+
+	void renderShadedDiscs(
+		GU_Detail *gdp,
+		RE_Render &ren,
+		const GU_PrimGroupClosure *hidden_geometry
+		);
+
     virtual const char *getName() const { return "ParticleViewer"; }
 };
 

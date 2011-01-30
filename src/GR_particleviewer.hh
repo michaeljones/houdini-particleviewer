@@ -33,6 +33,18 @@ public:
 			const GU_PrimGroupClosure *hidden_geometry
 			);
 
+	void renderWireCubes(
+		GU_Detail *gdp,
+		RE_Render &ren,
+		const GU_PrimGroupClosure *hidden_geometry
+		);
+
+	void renderWireDiscs(
+		GU_Detail *gdp,
+		RE_Render &ren,
+		const GU_PrimGroupClosure *hidden_geometry
+		);
+
     int getShadedMask(GU_Detail* /*gdp*/, const GR_DisplayOption* dopt) const;
 
     virtual void renderShaded(

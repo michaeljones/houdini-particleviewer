@@ -20,19 +20,16 @@ void ParticleViewerHook::renderWire(
 		const GU_PrimGroupClosure *hidden_geometry
 		)
 {
-	int                  i, nprim, nvtx;
-	GEO_Primitive       *prim;
-
 	const GR_UserOption* option = dopt->getOption( "particleviewerbox" );
 	if ( ! option ) 
 	{
 		return;
 	}
-	
-	nprim = gdp->primitives().entries();
-	for (i = 0; i < nprim; i++)
+
+	int nprim = gdp->primitives().entries();
+	for (int p = 0; p < nprim; ++p)
 	{
-	    prim = gdp->primitives()(i);
+	    GEO_Primitive* prim = gdp->primitives()(p);
 	
 	    // Ignore hidden geomtry
 	    if (hidden_geometry && hidden_geometry->containsPrim(prim))
@@ -42,81 +39,153 @@ void ParticleViewerHook::renderWire(
 	    if (!(prim->getPrimitiveId() & GEOPRIMPART))
 	        continue;
 
-		nvtx = prim->getVertexCount();
+		int nvtx = prim->getVertexCount();
 
-		GEO_AttributeHandle scaleAttr = gdp->getPointAttribute( "scale" );
-		GEO_AttributeHandle rotateAttr = gdp->getPointAttribute( "rotate" );
+		// Early exit if there are no particles
+		if ( ! nvtx ) continue;
 
-		bool scaleValid = scaleAttr.isAttributeValid();
-		bool rotateValid = rotateAttr.isAttributeValid();
+		GB_AttributeRef scaleRef = gdp->findPointAttrib( "scale", 3 * sizeof(float), GB_ATTRIB_FLOAT );
+		GB_AttributeRef rotateRef = gdp->findPointAttrib( "rotate", 3 * sizeof(float), GB_ATTRIB_FLOAT );
+
+		bool scaleValid = scaleRef.isValid();
+		bool rotateValid = rotateRef.isValid();
+
+		float* posData = new float[nvtx * 3 * 8];
 
 		for (int j=0; j < nvtx; j++)
 		{
-			GEO_Point* point = prim->getVertex(j).getPt();
-			UT_Vector4 pos = point->getPos();
+			GEO_Point* ppt = prim->getVertex(j).getPt();
+			UT_Vector4 pos = ppt->getPos();
 
-			UT_Vector3 scale( 1.0f, 1.0f, 1.0f );
+			UT_Matrix4 transform( 1.0f );
+
+			UT_Vector3 bx( 0.5, 0.0, 0.0 );
+			UT_Vector3 by( 0.0, 0.5, 0.0 );
+			UT_Vector3 bz( 0.0, 0.0, 0.5 );
+
 			if ( scaleValid )
 			{
-				scaleAttr.setElement( point );
-				scale = scaleAttr.getV3();
+				UT_Vector3 scaleBuffer;
+				const UT_Vector3* scale;
+				scale = ppt->getPointer< UT_Vector3 >( scaleRef, &scaleBuffer, 1 );
+				transform.scale( scale->x(), scale->y(), scale->z() );
 			}
 
-			UT_Vector3 rotate( 0.0f, 0.0f, 0.0f );
 			if ( rotateValid )
 			{
-				rotateAttr.setElement( point );
-				rotate = rotateAttr.getV3();
+				UT_Vector3 rotateBuffer;
+				const UT_Vector3* rotate;
+				UT_XformOrder xformOrder;
+				rotate = ppt->getPointer< UT_Vector3 >( rotateRef, &rotateBuffer, 1 );
+				transform.rotate( rotate->x(), rotate->y(), rotate->z(), xformOrder );
 			}
 
-			ren.pushMatrix();
+			bx = bx * transform;
+			by = by * transform;
+			bz = bz * transform;
 
-			ren.translate( pos.x(), pos.y(), pos.z() );
+			int offset = j * 3 * 8;
+			// Top +z
+			posData[ offset + 0 + 0 ] = pos[0] + bx[0] + by[0] + bz[0];
+			posData[ offset + 0 + 1 ] = pos[1] + bx[1] + by[1] + bz[1];
+			posData[ offset + 0 + 2 ] = pos[2] + bx[2] + by[2] + bz[2];
 
-			// Rotate around each axis in turn
-			ren.rotate( rotate.x(), 'x' );
-			ren.rotate( rotate.y(), 'y' );
-			ren.rotate( rotate.z(), 'z' );
+			posData[ offset + 3 + 0 ] = pos[0] + bx[0] - by[0] + bz[0];
+			posData[ offset + 3 + 1 ] = pos[1] + bx[1] - by[1] + bz[1];
+			posData[ offset + 3 + 2 ] = pos[2] + bx[2] - by[2] + bz[2];
 
-			ren.scale( scale.x(), scale.y(), scale.z() );
+			posData[ offset + 6 + 0 ] = pos[0] - bx[0] - by[0] + bz[0];
+			posData[ offset + 6 + 1 ] = pos[1] - bx[1] - by[1] + bz[1];
+			posData[ offset + 6 + 2 ] = pos[2] - bx[2] - by[2] + bz[2];
 
-			ren.beginClosedLine();
+			posData[ offset + 9 + 0 ] = pos[0] - bx[0] + by[0] + bz[0];
+			posData[ offset + 9 + 1 ] = pos[1] - bx[1] + by[1] + bz[1];
+			posData[ offset + 9 + 2 ] = pos[2] - bx[2] + by[2] + bz[2];
 
-			ren.vertex3DW( -0.5, -0.5, -0.5 );
-			ren.vertex3DW(  0.5, -0.5, -0.5 );
-			ren.vertex3DW(  0.5,  0.5, -0.5 );
-			ren.vertex3DW( -0.5,  0.5, -0.5 );
+			// Bottom -z
+			posData[ offset + 12 + 0 ] = pos[0] + bx[0] + by[0] - bz[0];
+			posData[ offset + 12 + 1 ] = pos[1] + bx[1] + by[1] - bz[1];
+			posData[ offset + 12 + 2 ] = pos[2] + bx[2] + by[2] - bz[2];
 
-			ren.endClosedLine();
+			posData[ offset + 15 + 0 ] = pos[0] + bx[0] - by[0] - bz[0];
+			posData[ offset + 15 + 1 ] = pos[1] + bx[1] - by[1] - bz[1];
+			posData[ offset + 15 + 2 ] = pos[2] + bx[2] - by[2] - bz[2];
 
-			ren.beginClosedLine();
+			posData[ offset + 18 + 0 ] = pos[0] - bx[0] - by[0] - bz[0];
+			posData[ offset + 18 + 1 ] = pos[1] - bx[1] - by[1] - bz[1];
+			posData[ offset + 18 + 2 ] = pos[2] - bx[2] - by[2] - bz[2];
 
-			ren.vertex3DW( -0.5, -0.5, 0.5 );
-			ren.vertex3DW(  0.5, -0.5, 0.5 );
-			ren.vertex3DW(  0.5,  0.5, 0.5 );
-			ren.vertex3DW( -0.5,  0.5, 0.5 );
-
-			ren.endClosedLine();
-
-			ren.beginLines();
-
-			ren.vertex3DW( -0.5, -0.5, -0.5 );
-			ren.vertex3DW( -0.5, -0.5,  0.5 );
-
-			ren.vertex3DW(  0.5,  0.5, -0.5 );
-			ren.vertex3DW(  0.5,  0.5,  0.5 );
-
-			ren.vertex3DW( -0.5,  0.5, -0.5 );
-			ren.vertex3DW( -0.5,  0.5,  0.5 );
-
-			ren.vertex3DW(  0.5, -0.5, -0.5 );
-			ren.vertex3DW(  0.5, -0.5,  0.5 );
-
-			ren.endLines();
-
-			ren.popMatrix();
+			posData[ offset + 21 + 0 ] = pos[0] - bx[0] + by[0] - bz[0];
+			posData[ offset + 21 + 1 ] = pos[1] - bx[1] + by[1] - bz[1];
+			posData[ offset + 21 + 2 ] = pos[2] - bx[2] + by[2] - bz[2];
 		}
 
+		/*
+		              3_______ 0
+		              /|     /|
+		             / |    / |
+		           2--------1 |
+		            |  |_ _|__|4
+		  z  y      | /7   | /
+		  | /       |/     |/
+		  |/       6--------5
+		  ----x
+		*/
+
+		int* indices = new int[ nvtx * 12 * 2 ];
+		for (int j=0; j < nvtx; j++)
+		{
+			indices[ j * 24 +  0 ] = 0 * 3;
+			indices[ j * 24 +  1 ] = 1 * 3;
+			indices[ j * 24 +  2 ] = 1 * 3;
+			indices[ j * 24 +  3 ] = 2 * 3;
+			indices[ j * 24 +  4 ] = 2 * 3;
+			indices[ j * 24 +  5 ] = 3 * 3;
+			indices[ j * 24 +  6 ] = 3 * 3;
+			indices[ j * 24 +  7 ] = 0 * 3;
+
+			indices[ j * 24 +  8 ] = 4 * 3;
+			indices[ j * 24 +  9 ] = 5 * 3;
+			indices[ j * 24 + 10 ] = 5 * 3;
+			indices[ j * 24 + 11 ] = 6 * 3;
+			indices[ j * 24 + 12 ] = 6 * 3;
+			indices[ j * 24 + 13 ] = 7 * 3;
+			indices[ j * 24 + 14 ] = 7 * 3;
+			indices[ j * 24 + 15 ] = 4 * 3;
+
+			indices[ j * 24 + 16 ] = 4 * 3;
+			indices[ j * 24 + 17 ] = 0 * 3;
+
+			indices[ j * 24 + 18 ] = 5 * 3;
+			indices[ j * 24 + 19 ] = 1 * 3;
+
+			indices[ j * 24 + 20 ] = 6 * 3;
+			indices[ j * 24 + 21 ] = 2 * 3;
+
+			indices[ j * 24 + 22 ] = 7 * 3;
+			indices[ j * 24 + 23 ] = 3 * 3;
+		}
+
+		ren.beginLines();
+
+		for (int j=0; j < nvtx; ++j )
+		{
+			int offset = j * 3 * 8;
+
+			for ( int i=0; i < 24; ++i )
+			{
+				ren.vertex3DW(
+						posData[ offset + indices[ i ] + 0 ],
+						posData[ offset + indices[ i ] + 1 ],
+						posData[ offset + indices[ i ] + 2 ]
+					);
+			}
+		}
+
+		ren.endLines();
+
+		delete [] posData;
+		delete [] indices;
 	}
 }
 

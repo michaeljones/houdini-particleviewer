@@ -134,19 +134,16 @@ void ParticleViewerHook::renderShaded(
 		const GU_PrimGroupClosure *hidden_geometry
 		)
 {
-	int                  i, nprim, nvtx;
-	GEO_Primitive       *prim;
-
 	const GR_UserOption* option = dopt->getOption( "particleviewerbox" );
 	if ( ! option ) 
 	{
 		return;
 	}
 
-	nprim = gdp->primitives().entries();
-	for (i = 0; i < nprim; i++)
+	int nprim = gdp->primitives().entries();
+	for (int p = 0; p < nprim; ++p)
 	{
-	    prim = gdp->primitives()(i);
+	    GEO_Primitive* prim = gdp->primitives()(p);
 	
 	    // Ignore hidden geomtry
 	    if (hidden_geometry && hidden_geometry->containsPrim(prim))
@@ -156,18 +153,22 @@ void ParticleViewerHook::renderShaded(
 	    if (!(prim->getPrimitiveId() & GEOPRIMPART))
 	        continue;
 
-		nvtx = prim->getVertexCount();
+		int nvtx = prim->getVertexCount();
 
-		GEO_AttributeHandle colourAttr = gdp->getPointAttribute( "colour" );
+		// Early exit if there are no particles
+		if ( ! nvtx ) continue;
+
+		GB_AttributeRef colourRef = gdp->findPointAttrib( "Cd", 3 * sizeof(float), GB_ATTRIB_FLOAT );
 		GB_AttributeRef scaleRef = gdp->findPointAttrib( "scale", 3 * sizeof(float), GB_ATTRIB_FLOAT );
 		GB_AttributeRef rotateRef = gdp->findPointAttrib( "rotate", 3 * sizeof(float), GB_ATTRIB_FLOAT );
 
-		// bool colourValid = colourAttr.isAttributeValid();
+		bool colourValid = colourRef.isValid();
 		bool scaleValid = scaleRef.isValid();
 		bool rotateValid = rotateRef.isValid();
 
 		float* posData = new float[nvtx * 3 * 8];
 		float* normals = new float[nvtx * 6 * 3];
+		float* colours = new float[nvtx * 3];
 
 		for (int j=0; j < nvtx; j++)
 		{
@@ -184,6 +185,16 @@ void ParticleViewerHook::renderShaded(
 			UT_Vector3 nx( 1.0, 0.0, 0.0 );
 			UT_Vector3 ny( 0.0, 1.0, 0.0 );
 			UT_Vector3 nz( 0.0, 0.0, 1.0 );
+
+			if ( colourValid )
+			{
+				UT_Vector3 colourBuffer;
+				const UT_Vector3* colour;
+				colour = ppt->getPointer< UT_Vector3 >( colourRef, &colourBuffer, 1 );
+				colours[ j * 3 + 0 ] = colour->x();
+				colours[ j * 3 + 1 ] = colour->y();
+				colours[ j * 3 + 2 ] = colour->z();
+			}
 
 			if ( scaleValid )
 			{
@@ -320,6 +331,15 @@ void ParticleViewerHook::renderShaded(
 			int offset = j * 3 * 8;
 			int normOffset = j * 3 * 6;
 
+			if ( colourValid )
+			{
+				ren.setColor(
+						colours[ j * 3 + 0 ],
+						colours[ j * 3 + 1 ],
+						colours[ j * 3 + 2 ],
+						1.0 );
+			}
+
 			for ( int i=0; i < 6; ++i )
 			{
 				ren.n3DW( normals + normOffset + i * 3 );
@@ -340,6 +360,7 @@ void ParticleViewerHook::renderShaded(
 		delete [] posData;
 		delete [] indices;
 		delete [] normals;
+		if ( colourValid ) delete [] colours;
 
 		/*
 		float                   life_buffer[2];

@@ -159,33 +159,31 @@ void ParticleViewerHook::renderShaded(
 		nvtx = prim->getVertexCount();
 
 		GEO_AttributeHandle colourAttr = gdp->getPointAttribute( "colour" );
-		GB_AttributeRef scaleRef = gdp->findPointAttrib( "scale", 3, GB_ATTRIB_FLOAT );
-		GB_AttributeRef rotateRef = gdp->findPointAttrib( "rotate", 3, GB_ATTRIB_FLOAT );
+		GB_AttributeRef scaleRef = gdp->findPointAttrib( "scale", 3 * sizeof(float), GB_ATTRIB_FLOAT );
+		GB_AttributeRef rotateRef = gdp->findPointAttrib( "rotate", 3 * sizeof(float), GB_ATTRIB_FLOAT );
 
 		// bool colourValid = colourAttr.isAttributeValid();
 		bool scaleValid = scaleRef.isValid();
 		bool rotateValid = rotateRef.isValid();
 
 		float* posData = new float[nvtx * 3 * 8];
+		float* normals = new float[nvtx * 6 * 3];
+
 		for (int j=0; j < nvtx; j++)
 		{
 			GEO_Point* ppt = prim->getVertex(j).getPt();
 			UT_Vector4 pos = ppt->getPos();
 
 			UT_Matrix4 transform( 1.0f );
+			UT_Matrix4 rotTransform( 1.0f );
 
 			UT_Vector3 bx( 0.5, 0.0, 0.0 );
 			UT_Vector3 by( 0.0, 0.5, 0.0 );
 			UT_Vector3 bz( 0.0, 0.0, 0.5 );
 
-			if ( rotateValid )
-			{
-				UT_Vector3 rotateBuffer;
-				const UT_Vector3* rotate;
-				UT_XformOrder xformOrder;
-				rotate = ppt->getPointer< UT_Vector3 >( rotateRef, &rotateBuffer, 1 );
-				transform.rotate( rotate->x(), rotate->y(), rotate->z(), xformOrder );
-			}
+			UT_Vector3 nx( 1.0, 0.0, 0.0 );
+			UT_Vector3 ny( 0.0, 1.0, 0.0 );
+			UT_Vector3 nz( 0.0, 0.0, 1.0 );
 
 			if ( scaleValid )
 			{
@@ -194,6 +192,20 @@ void ParticleViewerHook::renderShaded(
 				scale = ppt->getPointer< UT_Vector3 >( scaleRef, &scaleBuffer, 1 );
 				transform.scale( scale->x(), scale->y(), scale->z() );
 			}
+
+			if ( rotateValid )
+			{
+				UT_Vector3 rotateBuffer;
+				const UT_Vector3* rotate;
+				UT_XformOrder xformOrder;
+				rotate = ppt->getPointer< UT_Vector3 >( rotateRef, &rotateBuffer, 1 );
+				transform.rotate( rotate->x(), rotate->y(), rotate->z(), xformOrder );
+				rotTransform.rotate( rotate->x(), rotate->y(), rotate->z(), xformOrder );
+			}
+
+			nx = nx * rotTransform;
+			ny = ny * rotTransform;
+			nz = nz * rotTransform;
 
 			bx = bx * transform;
 			by = by * transform;
@@ -233,9 +245,46 @@ void ParticleViewerHook::renderShaded(
 			posData[ offset + 21 + 0 ] = pos[0] - bx[0] + by[0] - bz[0];
 			posData[ offset + 21 + 1 ] = pos[1] - bx[1] + by[1] - bz[1];
 			posData[ offset + 21 + 2 ] = pos[2] - bx[2] + by[2] - bz[2];
+
+			int normOffset = j * 3 * 6;
+			normals[ normOffset +  0 + 0 ] = -2 * nz[0];
+			normals[ normOffset +  0 + 1 ] = -2 * nz[1];
+			normals[ normOffset +  0 + 2 ] = -2 * nz[2];
+
+			normals[ normOffset +  3 + 0 ] = -2 * nz[0];
+			normals[ normOffset +  3 + 1 ] = -2 * nz[1];
+			normals[ normOffset +  3 + 2 ] = -2 * nz[2];
+
+			normals[ normOffset +  6 + 0 ] = -2 * nx[0];
+			normals[ normOffset +  6 + 1 ] = -2 * nx[1];
+			normals[ normOffset +  6 + 2 ] = -2 * nx[2];
+
+			normals[ normOffset +  9 + 0 ] = 2 * nx[0];
+			normals[ normOffset +  9 + 1 ] = 2 * nx[1];
+			normals[ normOffset +  9 + 2 ] = 2 * nx[2];
+
+			normals[ normOffset + 12 + 0 ] = 2 * ny[0];
+			normals[ normOffset + 12 + 1 ] = 2 * ny[1];
+			normals[ normOffset + 12 + 2 ] = 2 * ny[2];
+
+			normals[ normOffset + 15 + 0 ] = -2 * ny[0];
+			normals[ normOffset + 15 + 1 ] = -2 * ny[1];
+			normals[ normOffset + 15 + 2 ] = -2 * ny[2];
 		}
 
-		int* indices = new int[nvtx * 24];
+		/*
+		              3_______ 0
+	                  /|     /|
+		             / |    / |
+		           2--------1 |
+		            |  |_ _|__|4
+		  z  y      | /7   | /
+		  | /       |/     |/
+		  |/       6--------5
+		  ----x
+	    */
+
+		int* indices = new int[ nvtx * 6 * 4 ];
 		for (int j=0; j < nvtx; j++)
 		{
 			indices[ j * 24 +  0 ] = 0 * 3;
@@ -264,36 +313,16 @@ void ParticleViewerHook::renderShaded(
 			indices[ j * 24 + 23 ] = 3 * 3;
 		}
 
-		float* normals = new float[18];
-
-		normals[ 0] =  0.0f;
-		normals[ 1] =  0.0f;
-		normals[ 2] = -1.0f;
-		normals[ 3] =  0.0f;
-		normals[ 4] =  0.0f;
-		normals[ 5] = -1.0f;
-		normals[ 6] = -1.0f;
-		normals[ 7] =  0.0f;
-		normals[ 8] =  0.0f;
-		normals[ 9] =  1.0f;
-		normals[10] =  0.0f;
-		normals[11] =  0.0f;
-		normals[12] =  0.0f;
-		normals[13] =  1.0f;
-		normals[14] =  0.0f;
-		normals[15] =  0.0f;
-		normals[16] = -1.0f;
-		normals[17] =  0.0f;
-
 		ren.beginQuads();
 
 		for (int j=0; j < nvtx; ++j )
 		{
 			int offset = j * 3 * 8;
+			int normOffset = j * 3 * 6;
 
-			for ( int i=0; i<6; ++i )
+			for ( int i=0; i < 6; ++i )
 			{
-				// ren.n3DW( normals + i * 3 );
+				ren.n3DW( normals + normOffset + i * 3 );
 
 				for ( int k=0; k<4; ++k )
 				{

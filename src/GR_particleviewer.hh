@@ -68,6 +68,8 @@ public:
 		const GU_PrimGroupClosure *hidden_geometry
 		);
 
+	virtual GR_HookRender getHookRenderType(GU_Detail * /*gdp*/, const GR_DisplayOption * /*dopt*/);
+
     virtual const char *getName() const { return "ParticleViewer"; }
 };
 

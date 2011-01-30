@@ -6,6 +6,17 @@
 #include <UT/UT_Matrix4.h>
 #include <UT/UT_XformOrder.h>
 
+GR_RenderHook::GR_HookRender ParticleViewerHook::getHookRenderType(GU_Detail * /*gdp*/, const GR_DisplayOption* dopt)
+{
+	const GR_UserOption* discOption = dopt->getOption( "particleviewerdisc" );
+	if ( discOption ) 
+	{
+		return GR_RenderHook::VIEW_DEPENDENT;
+	}
+
+	return GR_RenderHook::VIEW_INDEPENDENT;
+}
+
 int ParticleViewerHook::getWireMask(GU_Detail* /*gdp*/, const GR_DisplayOption *dopt) const
 {
 	return GEOPRIMALL;
@@ -212,6 +223,13 @@ void ParticleViewerHook::renderWireDiscs(
 		const GU_PrimGroupClosure *hidden_geometry
 		)
 {
+	UT_Matrix4 camMatrix;
+	ren.getMatrix( camMatrix );
+	camMatrix.invert();
+
+	UT_Vector3 cameraPosition;
+	camMatrix.getTranslates( cameraPosition );
+
 	int nprim = gdp->primitives().entries();
 	for (int p = 0; p < nprim; ++p)
 	{
@@ -231,10 +249,8 @@ void ParticleViewerHook::renderWireDiscs(
 		if ( ! nvtx ) continue;
 
 		GB_AttributeRef scaleRef = gdp->findPointAttrib( "scale", 3 * sizeof(float), GB_ATTRIB_FLOAT );
-		GB_AttributeRef rotateRef = gdp->findPointAttrib( "rotate", 3 * sizeof(float), GB_ATTRIB_FLOAT );
 
 		bool scaleValid = scaleRef.isValid();
-		bool rotateValid = rotateRef.isValid();
 
 		float* posData = new float[nvtx * 3 * 11];
 
@@ -245,8 +261,6 @@ void ParticleViewerHook::renderWireDiscs(
 
 			UT_Matrix4 transform( 1.0f );
 
-			UT_Vector3 bx( 0.5, 0.0, 0.0 );
-			UT_Vector3 by( 0.0, 0.5, 0.0 );
 
 			if ( scaleValid )
 			{
@@ -256,69 +270,70 @@ void ParticleViewerHook::renderWireDiscs(
 				transform.scale( scale->x(), scale->y(), scale->z() );
 			}
 
-			if ( rotateValid )
-			{
-				UT_Vector3 rotateBuffer;
-				const UT_Vector3* rotate;
-				UT_XformOrder xformOrder;
-				rotate = ppt->getPointer< UT_Vector3 >( rotateRef, &rotateBuffer, 1 );
-				transform.rotate( rotate->x(), rotate->y(), rotate->z(), xformOrder );
-			}
+			UT_Vector3 pointToCam = cameraPosition - pos;
 
-			bx = bx * transform;
-			by = by * transform;
+			UT_Vector3 up = ( pointToCam + UT_Vector3( 0.0, 0.0, 1.0 ) );
+			up.cross( pointToCam );
+
+			UT_Vector3 left = up;
+			left.cross( pointToCam );
+			up.normalize();
+			left.normalize();
+
+			// bx = bx * transform;
+			// by = by * transform;
 
 			int offset = j * 3 * 10;
 
 			// sin & cos of 0.0/10.0 * 2 * pi
-			posData[ offset + 0 + 0 ] = pos[0] + 0.0f * bx[0] + 1.0f * by[0];
-			posData[ offset + 0 + 1 ] = pos[1] + 0.0f * bx[1] + 1.0f * by[1];
-			posData[ offset + 0 + 2 ] = pos[2] + 0.0f * bx[2] + 1.0f * by[2];
+			posData[ offset + 0 + 0 ] = pos[0] + 0.0f * left[0] + 1.0f * up[0];
+			posData[ offset + 0 + 1 ] = pos[1] + 0.0f * left[1] + 1.0f * up[1];
+			posData[ offset + 0 + 2 ] = pos[2] + 0.0f * left[2] + 1.0f * up[2];
 
 			// sin & cos of 1.0/10.0 * 2 * pi
-			posData[ offset + 3 + 0 ] = pos[0] + 0.587785252292f * bx[0] + 0.809016994375f * by[0];
-			posData[ offset + 3 + 1 ] = pos[1] + 0.587785252292f * bx[1] + 0.809016994375f * by[1];
-			posData[ offset + 3 + 2 ] = pos[2] + 0.587785252292f * bx[2] + 0.809016994375f * by[2];
+			posData[ offset + 3 + 0 ] = pos[0] + 0.587785252292f * left[0] + 0.809016994375f * up[0];
+			posData[ offset + 3 + 1 ] = pos[1] + 0.587785252292f * left[1] + 0.809016994375f * up[1];
+			posData[ offset + 3 + 2 ] = pos[2] + 0.587785252292f * left[2] + 0.809016994375f * up[2];
 
 			// sin & cos of 2.0/10.0 * 2 * pi
-			posData[ offset + 6 + 0 ] = pos[0] + 0.951056516295f * bx[0] + 0.309016994375f * by[0];
-			posData[ offset + 6 + 1 ] = pos[1] + 0.951056516295f * bx[1] + 0.309016994375f * by[1];
-			posData[ offset + 6 + 2 ] = pos[2] + 0.951056516295f * bx[2] + 0.309016994375f * by[2];
+			posData[ offset + 6 + 0 ] = pos[0] + 0.951056516295f * left[0] + 0.309016994375f * up[0];
+			posData[ offset + 6 + 1 ] = pos[1] + 0.951056516295f * left[1] + 0.309016994375f * up[1];
+			posData[ offset + 6 + 2 ] = pos[2] + 0.951056516295f * left[2] + 0.309016994375f * up[2];
 
 			// sin & cos of 3.0/10.0 * 2 * pi
-			posData[ offset + 9 + 0 ] = pos[0] + 0.951056516295f * bx[0] - 0.309016994375f * by[0];
-			posData[ offset + 9 + 1 ] = pos[1] + 0.951056516295f * bx[1] - 0.309016994375f * by[1];
-			posData[ offset + 9 + 2 ] = pos[2] + 0.951056516295f * bx[2] - 0.309016994375f * by[2];
+			posData[ offset + 9 + 0 ] = pos[0] + 0.951056516295f * left[0] - 0.309016994375f * up[0];
+			posData[ offset + 9 + 1 ] = pos[1] + 0.951056516295f * left[1] - 0.309016994375f * up[1];
+			posData[ offset + 9 + 2 ] = pos[2] + 0.951056516295f * left[2] - 0.309016994375f * up[2];
 
 			// sin & cos of 4.0/10.0 * 2 * pi
-			posData[ offset + 12 + 0 ] = pos[0] + 0.587785252292f * bx[0] - 0.809016994375f * by[0];
-			posData[ offset + 12 + 1 ] = pos[1] + 0.587785252292f * bx[1] - 0.809016994375f * by[1];
-			posData[ offset + 12 + 2 ] = pos[2] + 0.587785252292f * bx[2] - 0.809016994375f * by[2];
+			posData[ offset + 12 + 0 ] = pos[0] + 0.587785252292f * left[0] - 0.809016994375f * up[0];
+			posData[ offset + 12 + 1 ] = pos[1] + 0.587785252292f * left[1] - 0.809016994375f * up[1];
+			posData[ offset + 12 + 2 ] = pos[2] + 0.587785252292f * left[2] - 0.809016994375f * up[2];
 
 			// sin & cos of 5.0/10.0 * 2 * pi
-			posData[ offset + 15 + 0 ] = pos[0] + 0.0f * bx[0] - 1.0f * by[0];
-			posData[ offset + 15 + 1 ] = pos[1] + 0.0f * bx[1] - 1.0f * by[1];
-			posData[ offset + 15 + 2 ] = pos[2] + 0.0f * bx[2] - 1.0f * by[2];
+			posData[ offset + 15 + 0 ] = pos[0] + 0.0f * left[0] - 1.0f * up[0];
+			posData[ offset + 15 + 1 ] = pos[1] + 0.0f * left[1] - 1.0f * up[1];
+			posData[ offset + 15 + 2 ] = pos[2] + 0.0f * left[2] - 1.0f * up[2];
 
 			// sin & cos of 6.0/10.0 * 2 * pi
-			posData[ offset + 18 + 0 ] = pos[0] - 0.587785252292f * bx[0] - 0.809016994375f * by[0];
-			posData[ offset + 18 + 1 ] = pos[1] - 0.587785252292f * bx[1] - 0.809016994375f * by[1];
-			posData[ offset + 18 + 2 ] = pos[2] - 0.587785252292f * bx[2] - 0.809016994375f * by[2];
+			posData[ offset + 18 + 0 ] = pos[0] - 0.587785252292f * left[0] - 0.809016994375f * up[0];
+			posData[ offset + 18 + 1 ] = pos[1] - 0.587785252292f * left[1] - 0.809016994375f * up[1];
+			posData[ offset + 18 + 2 ] = pos[2] - 0.587785252292f * left[2] - 0.809016994375f * up[2];
 
 			// sin & cos of 7.0/10.0 * 2 * pi
-			posData[ offset + 21 + 0 ] = pos[0] - 0.951056516295f * bx[0] - 0.309016994375f * by[0];
-			posData[ offset + 21 + 1 ] = pos[1] - 0.951056516295f * bx[1] - 0.309016994375f * by[1];
-			posData[ offset + 21 + 2 ] = pos[2] - 0.951056516295f * bx[2] - 0.309016994375f * by[2];
+			posData[ offset + 21 + 0 ] = pos[0] - 0.951056516295f * left[0] - 0.309016994375f * up[0];
+			posData[ offset + 21 + 1 ] = pos[1] - 0.951056516295f * left[1] - 0.309016994375f * up[1];
+			posData[ offset + 21 + 2 ] = pos[2] - 0.951056516295f * left[2] - 0.309016994375f * up[2];
 
 			// sin & cos of 8.0/10.0 * 2 * pi
-			posData[ offset + 24 + 0 ] = pos[0] - 0.951056516295f * bx[0] + 0.309016994375f * by[0];
-			posData[ offset + 24 + 1 ] = pos[1] - 0.951056516295f * bx[1] + 0.309016994375f * by[1];
-			posData[ offset + 24 + 2 ] = pos[2] - 0.951056516295f * bx[2] + 0.309016994375f * by[2];
+			posData[ offset + 24 + 0 ] = pos[0] - 0.951056516295f * left[0] + 0.309016994375f * up[0];
+			posData[ offset + 24 + 1 ] = pos[1] - 0.951056516295f * left[1] + 0.309016994375f * up[1];
+			posData[ offset + 24 + 2 ] = pos[2] - 0.951056516295f * left[2] + 0.309016994375f * up[2];
 
 			// sin & cos of 9.0/10.0 * 2 * pi
-			posData[ offset + 27 + 0 ] = pos[0] - 0.587785252292f * bx[0] + 0.809016994375f * by[0];
-			posData[ offset + 27 + 1 ] = pos[1] - 0.587785252292f * bx[1] + 0.809016994375f * by[1];
-			posData[ offset + 27 + 2 ] = pos[2] - 0.587785252292f * bx[2] + 0.809016994375f * by[2];
+			posData[ offset + 27 + 0 ] = pos[0] - 0.587785252292f * left[0] + 0.809016994375f * up[0];
+			posData[ offset + 27 + 1 ] = pos[1] - 0.587785252292f * left[1] + 0.809016994375f * up[1];
+			posData[ offset + 27 + 2 ] = pos[2] - 0.587785252292f * left[2] + 0.809016994375f * up[2];
 		}
 
 		int* indices = new int[nvtx * 20];

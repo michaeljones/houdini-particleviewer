@@ -230,6 +230,8 @@ void ParticleViewerHook::renderWireDiscs(
 	UT_Vector3 cameraPosition;
 	camMatrix.getTranslates( cameraPosition );
 
+	UT_Vector3 up( camMatrix.myFloats[4], camMatrix.myFloats[5], camMatrix.myFloats[6] );
+
 	int nprim = gdp->primitives().entries();
 	for (int p = 0; p < nprim; ++p)
 	{
@@ -262,27 +264,26 @@ void ParticleViewerHook::renderWireDiscs(
 			UT_Vector4 pos = ppt->getPos();
 
 			UT_Matrix4 transform( 1.0f );
-			UT_Matrix4 rotTransform( 1.0f );
 
-			if ( scaleValid )
-			{
-				UT_Vector3 scaleBuffer;
-				const UT_Vector3* scale;
-				scale = ppt->getPointer< UT_Vector3 >( scaleRef, &scaleBuffer, 1 );
-				transform.scale( scale->x(), scale->y(), scale->z() );
-			}
-
-			UT_Vector3 bx( 1.0f, 0.0f, 0.0f );
-			UT_Vector3 by( 0.0f, 1.0f, 0.0f );
+			UT_Vector3 bx( 0.5f, 0.0f, 0.0f );
+			UT_Vector3 by( 0.0f, 0.5f, 0.0f );
 
 			if ( rotateValid )
 			{
+				if ( scaleValid )
+				{
+					UT_Vector3 scaleBuffer;
+					const UT_Vector3* scale;
+					scale = ppt->getPointer< UT_Vector3 >( scaleRef, &scaleBuffer, 1 );
+					bx[0] *= scale->x();
+					by[1] *= scale->y();
+				}
+
 				UT_Vector3 rotateBuffer;
 				const UT_Vector3* rotate;
 				UT_XformOrder xformOrder;
 				rotate = ppt->getPointer< UT_Vector3 >( rotateRef, &rotateBuffer, 1 );
 				transform.rotate( rotate->x(), rotate->y(), rotate->z(), xformOrder );
-				rotTransform.rotate( rotate->x(), rotate->y(), rotate->z(), xformOrder );
 
 				bx = bx * transform;
 				by = by * transform;
@@ -291,16 +292,25 @@ void ParticleViewerHook::renderWireDiscs(
 			{
 				UT_Vector3 pointToCam = cameraPosition - pos;
 
-				UT_Vector3 up = ( pointToCam + UT_Vector3( 0.0, 0.0, 1.0 ) );
-				up.cross( pointToCam );
+				UT_Vector3 localUp = up;
+				localUp.cross( pointToCam );
 
-				UT_Vector3 left = up;
+				UT_Vector3 left = localUp;
 				left.cross( pointToCam );
-				up.normalize();
+				localUp.normalize();
 				left.normalize();
 
 				bx = left;
-				by = up;
+				by = localUp;
+
+				if ( scaleValid )
+				{
+					UT_Vector3 scaleBuffer;
+					const UT_Vector3* scale;
+					scale = ppt->getPointer< UT_Vector3 >( scaleRef, &scaleBuffer, 1 );
+					bx *= scale->x();
+					by *= scale->y();
+				}
 			}
 
 			// bx = bx * transform;
@@ -676,6 +686,15 @@ void ParticleViewerHook::renderShadedDiscs(
 		const GU_PrimGroupClosure *hidden_geometry
 		)
 {
+	UT_Matrix4 camMatrix;
+	ren.getMatrix( camMatrix );
+	camMatrix.invert();
+
+	UT_Vector3 cameraPosition;
+	camMatrix.getTranslates( cameraPosition );
+
+	UT_Vector3 up( camMatrix.myFloats[4], camMatrix.myFloats[5], camMatrix.myFloats[6] );
+
 	int nprim = gdp->primitives().entries();
 	for (int p = 0; p < nprim; ++p)
 	{
@@ -714,11 +733,6 @@ void ParticleViewerHook::renderShadedDiscs(
 			UT_Matrix4 transform( 1.0f );
 			UT_Matrix4 rotTransform( 1.0f );
 
-			UT_Vector3 bx( 0.5, 0.0, 0.0 );
-			UT_Vector3 by( 0.0, 0.5, 0.0 );
-
-			UT_Vector3 n( 0.0, 0.0, 1.0 );
-
 			if ( colourValid )
 			{
 				UT_Vector3 colourBuffer;
@@ -729,28 +743,60 @@ void ParticleViewerHook::renderShadedDiscs(
 				colours[ j * 3 + 2 ] = colour->z();
 			}
 
-			if ( scaleValid )
-			{
-				UT_Vector3 scaleBuffer;
-				const UT_Vector3* scale;
-				scale = ppt->getPointer< UT_Vector3 >( scaleRef, &scaleBuffer, 1 );
-				transform.scale( scale->x(), scale->y(), scale->z() );
-			}
+			UT_Vector3 bx( 0.5f, 0.0f, 0.0f );
+			UT_Vector3 by( 0.0f, 0.5f, 0.0f );
+
+			UT_Vector3 n( 0.0f, 0.0f, 1.0f );
 
 			if ( rotateValid )
 			{
+				if ( scaleValid )
+				{
+					UT_Vector3 scaleBuffer;
+					const UT_Vector3* scale;
+					scale = ppt->getPointer< UT_Vector3 >( scaleRef, &scaleBuffer, 1 );
+					bx[0] *= scale->x();
+					by[1] *= scale->y();
+				}
+
 				UT_Vector3 rotateBuffer;
 				const UT_Vector3* rotate;
 				UT_XformOrder xformOrder;
 				rotate = ppt->getPointer< UT_Vector3 >( rotateRef, &rotateBuffer, 1 );
 				transform.rotate( rotate->x(), rotate->y(), rotate->z(), xformOrder );
 				rotTransform.rotate( rotate->x(), rotate->y(), rotate->z(), xformOrder );
+
+				bx = bx * transform;
+				by = by * transform;
+
+				n = n * rotTransform;
 			}
+			else
+			{
+				UT_Vector3 pointToCam = cameraPosition - pos;
 
-			n = n * rotTransform;
+				UT_Vector3 localUp = up;
+				localUp.cross( pointToCam );
 
-			bx = bx * transform;
-			by = by * transform;
+				UT_Vector3 left = localUp;
+				left.cross( pointToCam );
+				localUp.normalize();
+				left.normalize();
+
+				bx = left;
+				by = localUp;
+				n = pointToCam;
+				n.normalize();
+
+				if ( scaleValid )
+				{
+					UT_Vector3 scaleBuffer;
+					const UT_Vector3* scale;
+					scale = ppt->getPointer< UT_Vector3 >( scaleRef, &scaleBuffer, 1 );
+					bx *= scale->x();
+					by *= scale->y();
+				}
+			}
 
 			int offset = j * 3 * 11;
 

@@ -120,6 +120,8 @@ void WireCubeObject::draw(
 	  ----x
 	*/
 
+	/* Indicies are calculated in full as if we're dispatching this as a Vertex
+	   Buffer Object. Currently this isn't needed. We only need one set of indicies */
 	int* indices = new int[ nvtx * 12 * 2 ];
 	for (int j=0; j < nvtx; j++)
 	{
@@ -336,6 +338,8 @@ void ShadedCubeObject::draw(
 	  ----x
 	*/
 
+	/* Indicies are calculated in full as if we're dispatching this as a Vertex
+	   Buffer Object. Currently this isn't needed. We only need one set of indicies */
 	int* indices = new int[ nvtx * 6 * 4 ];
 	for (int j=0; j < nvtx; j++)
 	{
@@ -575,6 +579,8 @@ void WireDiscObject::draw(
 
 	int* indices = new int[nvtx * 20];
 
+	/* Indicies are calculated in full as if we're dispatching this as a Vertex
+	   Buffer Object. Currently this isn't needed. We only need one set of indicies */
 	for (int j=0; j < nvtx; ++j )
 	{
 		int offset = j * 20;
@@ -795,6 +801,8 @@ void ShadedDiscObject::draw(
 
 	int* indices = new int[nvtx * 30];
 
+	/* Indicies are calculated in full as if we're dispatching this as a Vertex
+	   Buffer Object. Currently this isn't needed. We only need one set of indicies */
 	for (int j=0; j < nvtx; ++j )
 	{
 		int offset = j * 30;

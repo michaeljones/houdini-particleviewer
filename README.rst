@@ -35,6 +35,20 @@ Two modes are available:
    and "Cd" attributes on each particle. If the "rotate" attribute is not
    present, the disc will be drawn facing the camera.
 
+Build
+-----
+
+I've have used this project to experiment with apenwarr's "redo" build system.
+Creating a Makefile equivalent would not be hard, the trouble is the Houdini
+install specific details in each target setup.
+
+The current build system is configured to my development machine. I imagine that
+if anyone uses this code and are used to compiling Houdini plugins then they'll
+have an approach of their own they can apply. 
+
+If you don't know how to best go about it, send me a message and I'll help as
+best I can.
+
 Notes
 -----
 
@@ -42,9 +56,6 @@ The code is compiled and tested on an Ubuntu 10.4 system with g++-4.1 installed.
 It runs on Houdini 11.0.581 Apprentice build. In the "About Houdini" dialog at
 states "Platform: linux-x86_64-gcc4.1".
 
-I've have used this project to experiment with apenwarr's "redo" build system.
-Creating a Makefile equivalent would not be hard, the trouble is the Houdini
-install specific details in each target setup.
 
 
 
